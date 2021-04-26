@@ -9,11 +9,12 @@ class Organization extends Model
      * @param array $org
      * @param array $data
      * @param bool $is_open
+     * @param int $weekend
      */
     protected $data = [];
     public $org = [];
     public $is_open = null;
-    
+    public $weekend = 5;
 
 
     public function listOrganization(){
@@ -35,24 +36,22 @@ class Organization extends Model
     public function schedule(array $data)
     {
          foreach($data as $key => $item){
-             
-             
 
-            if($this->weekendDay($item->day_of_week)){
+            if($this->day($item->day_of_week) != $this->weekend){
+                
                 
                 $this->org[$item->id]['name'] = $item->name;
                 $this->org[$item->id]['weekend'] =  $this->weekend();
-                $this->org[$item->id]['is_open'] = $this->is_open;   
+                $this->org[$item->id]['is_open'] = $this->is_open;       
 
-             
                      
             }else{
-                
+
                 $this->org[$item->id]['name'] = $item->name;
                 $this->org[$item->id]['weekdays'] = $this->weekdays($item->open,$item->close);
                 $this->org[$item->id]['schedule'] = substr($item->open,0,-3)."-".substr($item->close,0,-3);
                 $this->org[$item->id]['is_open'] = $this->is_open;  
-             
+                   
             }
           
          } 
@@ -64,8 +63,23 @@ class Organization extends Model
      
      public function weekdays(string $open, string $close)
      {
-       // график работы
-       $work_time = $this->workTime($open,$close);    
+        // количество рабочих часов
+        $work_h = $this->workingHours($open,$close); 
+       
+        return  $work_h;
+     }
+
+
+     public function weekend()
+     {
+            return "Выходной день.";
+     }
+
+     public function workingHours(string $open, string $close)
+     {
+        
+        // количество часов в рабочем дне 
+        $work_time = $this->countWorkDay($open,$close);    
 
        
        if($work_time) {
@@ -76,25 +90,20 @@ class Organization extends Model
          
            return $this->beforeOpening($open);
        }
-      
+    
      }
-
-
-     public function weekend()
+     
+     
+     public function countWorkDay($open,$close)
      {
-            return "Выходной день.";
-     }
-
-   
-     public function workTime($open,$close)
-     {
-       $cur_time = new \DateTime();
+       $cur_time = new DateTime();
        $cur_time->format('H:i:s');
        
-       $time_to_begin = new \DateTime($open);
-       $time_to_end = new \DateTime($close);
+       $time_to_begin = new DateTime($open);
+       $time_to_end = new DateTime($close);
 
         if ($cur_time->getTimestamp() > $time_to_begin->getTimestamp() && $cur_time->getTimestamp() < $time_to_end->getTimestamp()){
+             
              return  $this->is_open = true;  
         }else{
              return  $this->is_open = false;  
@@ -117,6 +126,7 @@ class Organization extends Model
      {
           $cur_time = new \DateTime();
           $time_to_open = new \DateTime('tomorrow'.$open);    
+
           $time = $cur_time->diff($time_to_open);
 
           return $time->format('%h часа(ов) и %i минут до открытия');
@@ -124,20 +134,21 @@ class Organization extends Model
 
 
 
-     public function weekendDay($day){
+     public function day(array $day){
 
-        $day = new \DateTime($day);
+       $day = new \DateTime();
         
-        
-        if($day->format('N') == 6 || $day->format('N') == 7)
+        if(array_search($day->format('l'), json_decode($days))+1)
         {
            return true; 
+            
         }else{
+            
            return false; 
+           
         }
-         
-
      }
+
 
 
 }  
