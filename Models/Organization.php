@@ -123,20 +123,6 @@ class Organization extends Model
           return $time->format('%h часа(ов) и %i минут до открытия');
      }
      
-     
-     public function updateDate()
-     {
-         
-         $data = $this->listOrganization();
-         
-         $sql = "UPDATE schedule SET day_of_week=:day_of_week WHERE id=:id";
-         
-         $stmt= $pdo->prepare($sql);
-         $stmt->execute($data);
-         
-     }
-
-
 
      public function weekendDay($days){
 
