@@ -138,7 +138,7 @@ class Organization extends Model
 
        $day = new \DateTime();
         
-        if(array_search($day->format('l'), json_decode($days))+1)
+        if(array_search($day->format('N'), json_decode($days))+1)
         {
            return true; 
             
